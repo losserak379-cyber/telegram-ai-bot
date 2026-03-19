@@ -7,7 +7,7 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-x4-upscaler"
+API_URL = "https://api-inference.huggingface.co/models/catalystai/pytorch-image-enhancer"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 # ===== BUTTON MENU =====
