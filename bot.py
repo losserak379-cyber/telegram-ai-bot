@@ -29,12 +29,12 @@ def handle_photo(message):
     file_info = bot.get_file(message.photo[-1].file_id)
     downloaded_file = bot.download_file(file_info.file_path)
 
-    response = requests.post(API_URL, headers=headers, data=downloaded_file)
+    response = requests.post(API_URL, headers=headers, files={"file": downloaded_file})
 
     if response.status_code == 200:
         bot.send_photo(message.chat.id, response.content)
     else:
-        bot.reply_to(message, "❌ Enhancement failed. Try later.")
+        bot.reply_to(message, f"❌ Failed\nStatus: {response.status_code}\n{response.text[:200]}")
 
 # ===== HELP BUTTON =====
 @bot.message_handler(func=lambda m: m.text == "ℹ Help")
