@@ -1,45 +1,36 @@
 import os
-import telebot
-import requests
+from telegram import Update
+from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
+import yt_dlp
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-HF_TOKEN = os.getenv("HF_TOKEN")
 
-bot = telebot.TeleBot(BOT_TOKEN)
+async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = update.message.text
 
-API_URL = "https://api-inference.huggingface.co/models/catalystai/pytorch-image-enhancer"
-headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    if "http" not in url:
+        await update.message.reply_text("❌ Send a valid link")
+        return
 
-# ===== BUTTON MENU =====
-from telebot.types import ReplyKeyboardMarkup, KeyboardButton
+    await update.message.reply_text("⏳ Downloading...")
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = KeyboardButton("🖼 Enhance Photo")
-    btn2 = KeyboardButton("ℹ Help")
-    markup.add(btn1, btn2)
-    bot.send_message(message.chat.id, "✨ Send a photo to enhance", reply_markup=markup)
+    ydl_opts = {
+        'format': 'best',
+        'outtmpl': 'video.%(ext)s'
+    }
 
-# ===== HANDLE PHOTO =====
-@bot.message_handler(content_types=['photo'])
-def handle_photo(message):
-    bot.reply_to(message, "✨ Enhancing... Please wait")
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            file = ydl.prepare_filename(info)
 
-    file_info = bot.get_file(message.photo[-1].file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
+        await update.message.reply_video(video=open(file, 'rb'))
+        os.remove(file)
 
-    response = requests.post(API_URL, headers=headers, files={"file": downloaded_file})
+    except:
+        await update.message.reply_text("❌ Failed to download")
 
-    if response.status_code == 200:
-        bot.send_photo(message.chat.id, response.content)
-    else:
-        bot.reply_to(message, f"❌ Failed\nStatus: {response.status_code}\n{response.text[:200]}")
+app = ApplicationBuilder().token(BOT_TOKEN).build()
+app.add_handler(MessageHandler(filters.TEXT, download))
 
-# ===== HELP BUTTON =====
-@bot.message_handler(func=lambda m: m.text == "ℹ Help")
-def help_btn(message):
-    bot.reply_to(message, "Send a photo and I will enhance it using AI.")
-
-print("Bot running...")
-bot.infinity_polling()
+app.run_polling()
