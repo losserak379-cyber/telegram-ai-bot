@@ -1,3 +1,1 @@
-python-telegram-bot==20.7
-yt-dlp==2025.03.10
-ffmpeg-python
+worker: python bot.py
