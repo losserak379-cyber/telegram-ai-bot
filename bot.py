@@ -120,7 +120,7 @@ async def process_download(query, url):
         os.remove(file_path)
 
     except Exception as e:
-        await msg.edit_text(f"❌ Error:\n{str(e)}")
+    await msg.edit_text(f"❌ Error:\n{str(e)}")
 
 # =========================
 # ⚙️ MAIN APP
