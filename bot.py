@@ -84,14 +84,27 @@ async def process_download(query, url):
     msg = await query.edit_message_text("⏳ Downloading...")
 
     ydl_opts = {
-        'format': 'best',
-        'outtmpl': 'video.%(ext)s',
-        'noplaylist': True,
-        'quiet': False,
-        'nocheckcertificate': True,
-        'ignoreerrors': True,
-        'geo_bypass': True,
-        'geo_bypass_country': 'IN',
+    'format': 'best',
+    'outtmpl': 'video.%(ext)s',
+    'noplaylist': True,
+    'quiet': False,
+
+    # 🔥 FIXES
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'geo_bypass': True,
+
+    # ✅ Add browser headers (VERY IMPORTANT)
+    'http_headers': {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    },
+
+    # ✅ Force Android client (fix YouTube)
+    'extractor_args': {
+        'youtube': {
+            'player_client': ['android']
+        }
+    }
     }
 
     try:
