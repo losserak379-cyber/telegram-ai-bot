@@ -19,7 +19,7 @@ user_links = {}
 
 🔗 PUT YOUR CHANNEL LINK HERE
 
-CHANNEL_LINK = "https://t.me/Multisaverbot_for_all"
+CHANNEL_LINK = "https://t.me/your_channel"
 
 =========================
 
