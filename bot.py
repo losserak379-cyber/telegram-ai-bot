@@ -12,11 +12,17 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Send a valid link")
         return
 
-    await update.message.reply_text("⏳ Downloading...")
+    await update.message.reply_video(
+    video=open(file, 'rb'),
+    caption="✅ Downloaded by MultiSaverBot"
+    )
 
     ydl_opts = {
-        'format': 'best',
-        'outtmpl': 'video.%(ext)s'
+    'format': 'best[height<=720][filesize<50M]/best',
+    'outtmpl': 'video.%(ext)s',
+    'noplaylist': True,
+    'merge_output_format': 'mp4',
+    'quiet': True
     }
 
     try:
