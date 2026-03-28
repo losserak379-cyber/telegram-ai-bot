@@ -12,27 +12,51 @@ from telegram.ext import (
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# 🔗 YOUR CHANNEL
+CHANNEL_USERNAME = "@Multisaverbot_for_all"
+CHANNEL_LINK = "https://t.me/Multisaverbot_for_all"
+
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 user_links = {}
 
-# 🔗 PUT YOUR CHANNEL LINK HERE
-CHANNEL_LINK = "https://t.me/your_channel"
+# =========================
+# 🔒 FORCE JOIN CHECK
+# =========================
+async def check_join(update, context):
+    user_id = update.effective_user.id
+    try:
+        member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
+        return member.status in ["member", "administrator", "creator"]
+    except:
+        return False
 
 # =========================
 # 🚀 START UI
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    joined = await check_join(update, context)
+
+    if not joined:
+        keyboard = [
+            [InlineKeyboardButton("📢 Join Channel", url=CHANNEL_LINK)],
+            [InlineKeyboardButton("✅ I Joined", callback_data="check_join")]
+        ]
+
+        await update.message.reply_text(
+            "🚫 You must join our channel to use this bot!",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        return
+
     keyboard = [
-        [InlineKeyboardButton("📥 Download Video", callback_data="download")],
-        [InlineKeyboardButton("📢 Join Channel", url=CHANNEL_LINK)],
+        [InlineKeyboardButton("📥 Download Video", callback_data="download")]
     ]
 
     await update.message.reply_text(
         "✨ *MultiSaver Bot* ✨\n\n"
-        "📥 Send any video link (YouTube, Instagram, Facebook)\n\n"
-        "👇 Click below to start:",
+        "📥 Send any video link (YouTube, Instagram, Facebook)",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
@@ -41,6 +65,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # 📩 RECEIVE LINK
 # =========================
 async def receive_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    joined = await check_join(update, context)
+
+    if not joined:
+        await update.message.reply_text("🚫 Join channel first using /start")
+        return
+
     url = update.message.text
 
     if "http" not in url:
@@ -68,6 +98,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data == "download":
         await query.edit_message_text("📥 Send your video link!")
 
+    elif query.data == "check_join":
+        joined = await check_join(update, context)
+
+        if joined:
+            await query.edit_message_text("✅ You can now use the bot! Send link 🎉")
+        else:
+            await query.answer("❌ Join channel first!", show_alert=True)
+
     elif query.data == "download_now":
         url = user_links.get(query.from_user.id)
 
@@ -84,28 +122,28 @@ async def process_download(query, url):
     msg = await query.edit_message_text("⏳ Downloading...")
 
     ydl_opts = {
-    'format': 'best',
-    'outtmpl': 'video.%(ext)s',
-    'noplaylist': True,
-    'quiet': False,
+        'format': 'best',
+        'outtmpl': 'video.%(ext)s',
+        'noplaylist': True,
+        'quiet': False,
 
-    # 🔥 FIXES
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'geo_bypass': True,
+        'nocheckcertificate': True,
+        'ignoreerrors': False,
+        'geo_bypass': True,
 
-    # ✅ Add browser headers (VERY IMPORTANT)
-    'http_headers': {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    },
+        # 🔥 Instagram Fix (optional but recommended)
+        'cookiefile': 'cookies.txt',
 
-    # ✅ Force Android client (fix YouTube)
-    'extractor_args': {
-        'youtube': {
-            'player_client': ['android']
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        },
+
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android']
+            }
         }
     }
-}
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -121,7 +159,10 @@ async def process_download(query, url):
 
         await query.message.reply_video(
             video=open(file_path, "rb"),
-            caption=f"🎬 {info.get('title','Video')}\n\n✅ Done"
+            caption=f"🎬 {info.get('title','Video')}\n\n✅ Done",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📢 Join Channel", url=CHANNEL_LINK)]
+            ])
         )
 
         os.remove(file_path)
