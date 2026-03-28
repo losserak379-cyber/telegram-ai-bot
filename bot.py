@@ -41,31 +41,40 @@ async def handle_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-# 📥 DOWNLOAD FUNCTION
+# 📥 DOWNLOAD FUNCTIONS 
 async def download_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    data = query.data.split("|")
-    quality = data[0]
-    url = data[1]
+    quality, url = query.data.split("|")
 
-    msg = await query.message.reply_text("⏳ Downloading...")
+    msg = await query.message.reply_text("⏳ Fetching video...")
 
     try:
         if quality == "360":
-            format_code = "bestvideo[height<=360]+bestaudio/best[height<=360]"
+            format_code = "best[height<=360]"
         elif quality == "720":
-            format_code = "bestvideo[height<=720]+bestaudio/best[height<=720]"
+            format_code = "best[height<=720]"
         else:
             format_code = "best"
 
         ydl_opts = {
             "format": format_code,
-            "outtmpl": f"{DOWNLOAD_FOLDER}/%(title)s.%(ext)s",
+            "outtmpl": "downloads/%(title)s.%(ext)s",
             "merge_output_format": "mp4",
             "noplaylist": True,
-            "quiet": True,
+            "quiet": False,
+
+            # 🔥 IMPORTANT FIXES
+            "nocheckcertificate": True,
+            "geo_bypass": True,
+            "headers": {
+                "User-Agent": "Mozilla/5.0",
+                "Referer": url,
+            },
+
+            # try generic extractor
+            "extractor_retries": 3,
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -80,7 +89,7 @@ async def download_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.delete()
 
     except Exception as e:
-        await msg.edit_text(f"❌ Error:\n{str(e)}")
+        await msg.edit_text(f"❌ Failed:\n{str(e)}")
 
 # 🚀 MAIN
 def main():
