@@ -122,27 +122,24 @@ async def process_download(query, url):
     msg = await query.edit_message_text("⏳ Downloading...")
 
     ydl_opts = {
-        'format': 'best',
-        'outtmpl': 'video.%(ext)s',
-        'noplaylist': True,
-        'quiet': False,
+    'format': 'best',
+    'outtmpl': 'video.%(ext)s',
+    'noplaylist': True,
+    'quiet': False,
 
-        'nocheckcertificate': True,
-        'ignoreerrors': False,
-        'geo_bypass': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'geo_bypass': True,
 
-        # 🔥 Instagram Fix (optional but recommended)
-        'cookiefile': 'cookies.txt',
+    'http_headers': {
+        'User-Agent': 'Mozilla/5.0',
+    },
 
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        },
-
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android']
-            }
+    'extractor_args': {
+        'youtube': {
+            'player_client': ['android']
         }
+    }
     }
 
     try:
